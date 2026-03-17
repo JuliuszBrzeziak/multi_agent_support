@@ -1,25 +1,28 @@
 package com.juliusz.support;
 
-import com.openai.client.OpenAIClient;
-import com.openai.client.okhttp.OpenAIOkHttpClient;
-import com.openai.models.ChatModel;
-import com.openai.models.chat.completions.ChatCompletion;
-import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import java.util.Scanner;
 
 public class App {
 
     public static void main(String[] args) {
-        OpenAIClient client = OpenAIOkHttpClient.fromEnv();
+        OpenAiChatClient chatClient = new OpenAiChatClient();
+        ConversationOrchestrator orchestrator = new ConversationOrchestrator(chatClient);
+        Scanner scanner = new Scanner(System.in);
 
-        ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
-                .model(ChatModel.GPT_4_1)
-                .addUserMessage("Say hello to me in one short sentence.")
-                .build();
+        System.out.println("Multi-agent support console. Type 'exit' to quit.");
 
-        ChatCompletion completion = client.chat().completions().create(params);
+        while (true) {
+            System.out.print("You: ");
+            String input = scanner.nextLine();
 
-        completion.choices().forEach(choice ->
-                choice.message().content().ifPresent(System.out::println)
-        );
+            if ("exit".equalsIgnoreCase(input.trim())) {
+                break;
+            }
+
+            String reply = orchestrator.handleUserMessage(input);
+            System.out.println("Assistant: " + reply);
+        }
+
+        scanner.close();
     }
 }
