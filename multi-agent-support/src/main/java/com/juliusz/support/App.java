@@ -19,8 +19,9 @@ public class App {
                 break;
             }
 
-            String reply = orchestrator.handleUserMessage(input);
-            System.out.println("Assistant: " + reply);
+            AgentReply reply = orchestrator.handleUserMessage(input);
+            System.out.println(reply.agentName() + ": " + reply.message());
+            
         }
 
         scanner.close();

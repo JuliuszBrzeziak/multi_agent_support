@@ -27,19 +27,20 @@ public class ConversationOrchestrator {
      *  - route to the most appropriate agent
      *  - let the selected agent generate a reply
      */
-    public String handleUserMessage(String userMessage) {
+    public AgentReply handleUserMessage(String userMessage) {
         history.add("USER: " + userMessage);
-        context.addMessage("USER: " + userMessage);   // <--- now using context
+        context.addMessage("USER: " + userMessage);
     
         SupportAgent selectedAgent = routeToAgent(userMessage);
     
         String agentReply = selectedAgent.respond(userMessage, context);
     
         history.add(selectedAgent.getName() + ": " + agentReply);
-        context.addMessage(selectedAgent.getName() + ": " + agentReply);   // <---
+        context.addMessage(selectedAgent.getName() + ": " + agentReply);
     
-        return agentReply;
+        return new AgentReply(selectedAgent.getName(), agentReply);
     }
+    
     
 
     /**
