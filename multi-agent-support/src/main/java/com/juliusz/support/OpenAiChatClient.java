@@ -31,4 +31,16 @@ public class OpenAiChatClient {
 
         return completion.choices().get(0).message().content().orElse("");
     }
+
+    public String sendSingleTurnPrompt(String prompt) {
+        ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
+                .model(ChatModel.GPT_4_1)
+                .addUserMessage(prompt)
+                .build();
+    
+        ChatCompletion completion = client.chat().completions().create(params);
+    
+        return completion.choices().get(0).message().content().orElse("");
+    }
+    
 }
