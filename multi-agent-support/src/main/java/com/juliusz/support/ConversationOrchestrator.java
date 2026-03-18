@@ -29,17 +29,18 @@ public class ConversationOrchestrator {
      */
     public String handleUserMessage(String userMessage) {
         history.add("USER: " + userMessage);
-
+        context.addMessage("USER: " + userMessage);   // <--- now using context
+    
         SupportAgent selectedAgent = routeToAgent(userMessage);
-
+    
         String agentReply = selectedAgent.respond(userMessage, context);
-
+    
         history.add(selectedAgent.getName() + ": " + agentReply);
-
-        // For now, agents return a stub reply.
-        // Later, each agent will use OpenAiChatClient with its own context.
+        context.addMessage(selectedAgent.getName() + ": " + agentReply);   // <---
+    
         return agentReply;
     }
+    
 
     /**
      * Very simple routing based on keywords in the user message.
