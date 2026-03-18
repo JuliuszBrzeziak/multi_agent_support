@@ -11,9 +11,6 @@ public class ConversationOrchestrator {
     private final BillingAgent billingAgent;
     private final ConversationContext context;
 
-    // Simple text history; later we can replace this with a richer message model
-    private final List<String> history = new ArrayList<>();
-
     public ConversationOrchestrator(OpenAiChatClient chatClient) {
         this.chatClient = chatClient;
         this.technicalAgent = new TechnicalAgent();
@@ -28,19 +25,16 @@ public class ConversationOrchestrator {
      *  - let the selected agent generate a reply
      */
     public AgentReply handleUserMessage(String userMessage) {
-        history.add("USER: " + userMessage);
         context.addMessage("USER: " + userMessage);
     
         SupportAgent selectedAgent = routeToAgent(userMessage);
     
         String agentReply = selectedAgent.respond(userMessage, context);
     
-        history.add(selectedAgent.getName() + ": " + agentReply);
         context.addMessage(selectedAgent.getName() + ": " + agentReply);
     
         return new AgentReply(selectedAgent.getName(), agentReply);
     }
-    
     
 
     /**
