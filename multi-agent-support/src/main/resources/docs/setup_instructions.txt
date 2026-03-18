@@ -1,0 +1,8 @@
+Prerequisites
+To set up the integration you need an active account with the Standard plan or higher. The user creating the API key must have permission to manage integrations and access billing settings.
+If your company uses a firewall or VPN, make sure outbound HTTPS traffic to our API domain is allowed. In some cases you may need to add our IP ranges to your allowlist.
+
+
+Creating an API key
+Go to the „Developers” section in the web app and open the „API keys” page. Click „Create key”, give it a descriptive name (for example prod-backend-service), and select the minimal scopes required for your use case.
+Copy the key once and store it in a secure secret manager. Do not commit keys to source control. If a key is ever exposed, revoke it immediately and generate a new one.

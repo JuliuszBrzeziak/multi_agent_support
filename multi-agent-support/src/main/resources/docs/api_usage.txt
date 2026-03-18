@@ -1,0 +1,7 @@
+Authentication
+To authenticate API requests, include your API key in the Authorization header using the Bearer scheme. The header should look like Authorization: Bearer YOUR_API_KEY.
+You can test your credentials by calling a simple health endpoint, for example GET /v1/health. A 200 OK response confirms that the key is valid and has basic access.
+
+Basic GET example
+A typical read request uses the GET /v1/customers/{id} endpoint to fetch a single customer. You must provide the customer ID in the path and include your API key in the header.
+On success, the API returns a JSON object with fields such as id, email, status and created_at. If the customer does not exist, you will receive a 404 error with an error code like customer_not_found.

@@ -1,1 +1,9 @@
-How to debug 500 errors when integrating with HubSpot...
+HTTP 401 / 403 – authentication issues
+These errors mean the API could not authenticate your request. 401 usually indicates a missing or invalid API key, while 403 means the key is valid but does not have permission for this operation.
+To fix these issues, first check that you are sending the API key in the correct HTTP header and that there are no extra spaces. Next, verify that you are using the correct base URL for your environment (sandbox vs production) and that the key is not expired or revoked.
+
+
+HTTP 500 from third‑party systems
+A 500 error indicates that the remote system (for example, HubSpot) failed to process your request. This is usually a temporary issue on their side, but it can also be triggered by invalid payloads.
+When you see a 500, log the full request body and correlation ID, then try again with a simple test payload. If the error persists, check the third‑party status page and configure exponential backoff retries instead of retrying in a tight loop.
+

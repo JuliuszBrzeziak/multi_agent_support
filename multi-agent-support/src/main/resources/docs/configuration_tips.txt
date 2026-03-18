@@ -1,0 +1,7 @@
+HTTP timeouts and retries
+For most integrations we recommend a connect timeout of 5 seconds and a read timeout of 30 seconds. Shorter timeouts make failures visible faster, but too aggressive values can break slow network connections.
+When implementing retries, only retry idempotent requests (such as GET) and use exponential backoff. Avoid retrying POST requests that create resources, unless the API explicitly guarantees idempotency.
+
+Logging best practices
+For each API call, log the HTTP method, URL, response status code and a correlation ID if available. This makes it much easier for support to trace specific requests in the logs.
+Never log raw API keys, passwords or personal data. If you need to include identifiers, mask them or log only the last few characters so that you can still match the value without exposing sensitive information.
