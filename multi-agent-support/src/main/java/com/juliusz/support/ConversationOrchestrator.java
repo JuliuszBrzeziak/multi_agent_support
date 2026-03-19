@@ -1,18 +1,14 @@
 package com.juliusz.support;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 public class ConversationOrchestrator {
 
-    private final OpenAiChatClient chatClient;
     private final TechnicalAgent technicalAgent;
     private final BillingAgent billingAgent;
     private final ConversationContext context;
 
-    public ConversationOrchestrator(OpenAiChatClient chatClient) {
-        this.chatClient = chatClient;
+    public ConversationOrchestrator() {
         this.technicalAgent = new TechnicalAgent();
         this.billingAgent = new BillingAgent();
         this.context = new ConversationContext();

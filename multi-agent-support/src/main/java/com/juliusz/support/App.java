@@ -6,7 +6,7 @@ public class App {
 
     public static void main(String[] args) {
         OpenAiChatClient chatClient = new OpenAiChatClient();
-        ConversationOrchestrator orchestrator = new ConversationOrchestrator(chatClient);
+        ConversationOrchestrator orchestrator = new ConversationOrchestrator();
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Multi-agent support console. Type 'exit' to quit.");
