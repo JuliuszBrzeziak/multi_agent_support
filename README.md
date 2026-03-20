@@ -19,7 +19,6 @@ This project implements a conversational support system in Java featuring two co
   - `id` and a short description.
 - **Triage Mechanism**: Classifies new user messages into categories and creates tasks accordingly.
 - **Task Execution**: Only one task is active at a time. The orchestrator determines which agent responds based on the task's category and status.
-- **Manual Implementation**: Agent orchestration is built from scratch in Java without external frameworks (like LangChain), ensuring a clean separation of concerns: the orchestrator decides *who* responds, and the agents decide *how* to handle the request.
 
 ### 🛠️ Technical Agent (Technical Specialist)
 - Answers technical questions using a focused set of local documentation files.
