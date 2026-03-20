@@ -19,12 +19,14 @@ public class TechnicalAgent implements SupportAgent {
     }
 
     @Override
-    public String respond(String userMessage, ConversationContext context) {
+    public String respond(ConversationTask task, String userMessage, ConversationContext context) {
+        // używamy treści taska jako pytania technicznego
+        String question = task.getRawText();
+
         // 1) Retrieve relevant documentation snippets
-        List<String> snippets = docs.findRelevantSnippets(userMessage, 2);
+        List<String> snippets = docs.findRelevantSnippets(question, 2);
 
         if (snippets.isEmpty()) {
-            // Requirement: do not hallucinate if we have no info
             return "TechnicalAgent: I could not find relevant information in the documentation. " +
                     "Could you clarify your question or check with general support?";
         }
@@ -45,7 +47,7 @@ public class TechnicalAgent implements SupportAgent {
 
                 USER QUESTION:
                 %s
-                """.formatted(contextText, userMessage);
+                """.formatted(contextText, question);
 
         return chatClient.sendSingleTurnPrompt(prompt);
     }

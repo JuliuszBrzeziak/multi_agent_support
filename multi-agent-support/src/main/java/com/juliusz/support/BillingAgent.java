@@ -20,16 +20,31 @@ public class BillingAgent implements SupportAgent {
     }
 
     @Override
-    public String respond(String userMessage, ConversationContext context) {
+    public String respond(ConversationTask task, String userMessage, ConversationContext context) {
         try {
-            // 1. Poproś LLM o wybór toola i argumentów w formacie JSON
-            String toolDecisionJson = askModelForToolDecision(userMessage);
+            // 0. Drugi krok: task jest w trakcie (IN_PROGRESS) → userMessage to customerId
+            if (task.getStatus() == ConversationTask.TaskStatus.IN_PROGRESS
+                    && task.getCategory() == ConversationTask.TaskCategory.BILLING) {
+
+                String customerId = userMessage.trim();
+                String toolResult = tools.getBillingHistory(customerId);
+
+                task.setStatus(ConversationTask.TaskStatus.DONE);
+
+                return summarizeToolResult(
+                        userMessage,
+                        "getBillingHistory",
+                        toolResult
+                );
+            }
+
+            // 1. Nowy task – normalny LLM tool-calling na treści taska
+            String toolDecisionJson = askModelForToolDecision(task.getRawText());
 
             JsonNode root = objectMapper.readTree(toolDecisionJson);
             String toolName = root.path("toolName").asText(null);
             JsonNode args = root.path("arguments");
 
-            // 2. Jeśli model nie wybrał żadnego narzędzia – dopytaj użytkownika
             if (toolName == null || toolName.isEmpty() || "null".equalsIgnoreCase(toolName)) {
                 return """
                         BillingAgent: I see you mentioned a billing topic, but I'm not sure what you want me to do.
@@ -43,32 +58,35 @@ public class BillingAgent implements SupportAgent {
                         """;
             }
 
-            // 3. Wywołaj odpowiedni BillingTools
             String toolResult;
             switch (toolName) {
                 case "confirmPlan" -> {
                     String customerId = args.path("customerId").asText("demo-customer-id");
                     toolResult = tools.confirmPlan(customerId);
+                    task.setStatus(ConversationTask.TaskStatus.DONE);
                 }
                 case "openRefundCase" -> {
                     String customerId = args.path("customerId").asText("demo-customer-id");
-                    String reason = args.path("reason").asText(userMessage);
+                    String reason = args.path("reason").asText(task.getRawText());
                     toolResult = tools.openRefundCase(customerId, reason);
+                    task.setStatus(ConversationTask.TaskStatus.DONE);
                 }
                 case "explainRefundPolicy" -> {
                     toolResult = tools.explainRefundPolicy();
+                    task.setStatus(ConversationTask.TaskStatus.DONE);
                 }
                 case "getBillingHistory" -> {
-                    String customerId = args.path("customerId").asText("demo-customer-id");
-                    toolResult = tools.getBillingHistory(customerId);
+                    // Krok 1 z 2: prosimy o ID i zostawiamy task w IN_PROGRESS
+                    task.setStatus(ConversationTask.TaskStatus.IN_PROGRESS);
+                    return "BillingAgent: To show your billing history, please provide your customer ID.";
                 }
                 default -> {
                     toolResult = "BillingAgent: unknown billing tool: " + toolName;
+                    task.setStatus(ConversationTask.TaskStatus.DONE);
                 }
             }
 
-            // 4. Poproś LLM o finalną odpowiedź na bazie wyniku toola
-            return summarizeToolResult(userMessage, toolName, toolResult);
+            return summarizeToolResult(task.getRawText(), toolName, toolResult);
 
         } catch (Exception e) {
             return "BillingAgent: something went wrong while processing your billing request.";

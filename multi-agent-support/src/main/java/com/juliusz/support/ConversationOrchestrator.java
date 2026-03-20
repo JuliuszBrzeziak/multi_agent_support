@@ -18,29 +18,36 @@ public class ConversationOrchestrator {
         this.billingAgent = new BillingAgent();
     }
 
-    /**
-     * Handle a new user message.
-     * Commands:
-     * - "next"  -> process next pending task
-     * - others  -> triage into tasks, then process next pending task
-     */
     public String handleUserMessage(String userMessage) {
         String trimmed = userMessage.trim().toLowerCase();
         context.addUserMessage(userMessage);
 
-        // Komenda sterująca: nie robimy triage, tylko bierzemy kolejny task
+        // Komendy sterujące
         if ("next".equals(trimmed)) {
-            return handleNextTask();
+            return handleNextTask(userMessage);
         }
 
-        // Normalny flow: nowa wiadomość → triage LLM → taski
+        // 1. Jeśli jest billingowy task w IN_PROGRESS, kontynuuj go
+        ConversationTask inProgressBilling = tasks.stream()
+                .filter(t -> t.getStatus() == ConversationTask.TaskStatus.IN_PROGRESS)
+                .filter(t -> t.getCategory() == ConversationTask.TaskCategory.BILLING)
+                .findFirst()
+                .orElse(null);
+
+        if (inProgressBilling != null) {
+            String response = billingAgent.respond(inProgressBilling, userMessage, context);
+            context.addAgentMessage(response);
+            return response;
+        }
+
+        // 2. Normalny flow: nowa wiadomość → triage LLM → taski
         List<ConversationTask> newTasks = triageAgent.analyze(userMessage);
         tasks.addAll(newTasks);
 
-        return handleNextTask();
+        return handleNextTask(userMessage);
     }
 
-    private String handleNextTask() {
+    private String handleNextTask(String userMessage) {
         // znajdź pierwszy NEW task z kategorią TECHNICAL/BILLING
         ConversationTask nextTask = tasks.stream()
                 .filter(t -> t.getStatus() == ConversationTask.TaskStatus.NEW)
@@ -57,24 +64,24 @@ public class ConversationOrchestrator {
             return outOfScope;
         }
 
-        nextTask.setStatus(ConversationTask.TaskStatus.IN_PROGRESS);
-
         String agentResponse;
         if (nextTask.getCategory() == ConversationTask.TaskCategory.TECHNICAL) {
-            agentResponse = technicalAgent.respond(nextTask.getRawText(), context);
+            nextTask.setStatus(ConversationTask.TaskStatus.IN_PROGRESS);
+            agentResponse = technicalAgent.respond(nextTask, userMessage, context);
+            nextTask.setStatus(ConversationTask.TaskStatus.DONE);
         } else {
-            agentResponse = billingAgent.respond(nextTask.getRawText(), context);
+            nextTask.setStatus(ConversationTask.TaskStatus.NEW); // BillingAgent sam ustawi IN_PROGRESS/DONE
+            agentResponse = billingAgent.respond(nextTask, userMessage, context);
+            // dla getBillingHistory BillingAgent może zostawić task w IN_PROGRESS
+            if (nextTask.getStatus() == ConversationTask.TaskStatus.NEW) {
+                nextTask.setStatus(ConversationTask.TaskStatus.DONE);
+            }
         }
-
-        nextTask.setStatus(ConversationTask.TaskStatus.DONE);
 
         context.addAgentMessage(agentResponse);
         return agentResponse;
     }
 
-    /**
-     * Tekstowy podgląd tasków (do komendy "status" w App).
-     */
     public String getTasksStatus() {
         if (tasks.isEmpty()) {
             return "No tasks have been created yet.";
