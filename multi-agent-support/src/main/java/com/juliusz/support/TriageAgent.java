@@ -69,7 +69,6 @@ public class TriageAgent {
             JsonNode root = objectMapper.readTree(llmResponseJson);
 
             if (!root.isArray()) {
-                // jeśli model zawali format, potraktuj całą wiadomość jako jeden TRIAGE task
                 ConversationTask fallback = new ConversationTask(nextTaskId++, llmResponseJson);
                 fallback.setCategory(ConversationTask.TaskCategory.TRIAGE);
                 tasks.add(fallback);

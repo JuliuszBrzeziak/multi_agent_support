@@ -19,21 +19,29 @@ public class ConversationOrchestrator {
     }
 
     /**
-     * Handle a new user message:
-     * - update context,
-     * - use LLM triage to create tasks,
-     * - pick the next NEW task (non-TRIAGE),
-     * - route to the appropriate agent,
-     * - return agent's response.
+     * Handle a new user message.
+     * Commands:
+     * - "next"  -> process next pending task
+     * - others  -> triage into tasks, then process next pending task
      */
     public String handleUserMessage(String userMessage) {
+        String trimmed = userMessage.trim().toLowerCase();
         context.addUserMessage(userMessage);
 
-        // 1. LLM triage → nowe taski
+        // Komenda sterująca: nie robimy triage, tylko bierzemy kolejny task
+        if ("next".equals(trimmed)) {
+            return handleNextTask();
+        }
+
+        // Normalny flow: nowa wiadomość → triage LLM → taski
         List<ConversationTask> newTasks = triageAgent.analyze(userMessage);
         tasks.addAll(newTasks);
 
-        // 2. Wybierz pierwszy NEW task, który ma konkretną kategorię
+        return handleNextTask();
+    }
+
+    private String handleNextTask() {
+        // znajdź pierwszy NEW task z kategorią TECHNICAL/BILLING
         ConversationTask nextTask = tasks.stream()
                 .filter(t -> t.getStatus() == ConversationTask.TaskStatus.NEW)
                 .filter(t -> t.getCategory() != ConversationTask.TaskCategory.TRIAGE)
@@ -41,7 +49,6 @@ public class ConversationOrchestrator {
                 .orElse(null);
 
         if (nextTask == null) {
-            // Nic nie jest jednoznacznie TECHNICAL/BILLING → globalny out-of-scope
             String outOfScope = """
                     I’m sorry, but I cannot assist with that request.
                     Please contact our general support team.
@@ -52,7 +59,6 @@ public class ConversationOrchestrator {
 
         nextTask.setStatus(ConversationTask.TaskStatus.IN_PROGRESS);
 
-        // 3. Zrutuj task do odpowiedniego agenta
         String agentResponse;
         if (nextTask.getCategory() == ConversationTask.TaskCategory.TECHNICAL) {
             agentResponse = technicalAgent.respond(nextTask.getRawText(), context);
@@ -66,19 +72,25 @@ public class ConversationOrchestrator {
         return agentResponse;
     }
 
+    /**
+     * Tekstowy podgląd tasków (do komendy "status" w App).
+     */
     public String getTasksStatus() {
         if (tasks.isEmpty()) {
             return "No tasks have been created yet.";
         }
-    
+
         StringBuilder sb = new StringBuilder();
         sb.append("Current tasks:\n");
         for (ConversationTask t : tasks) {
             sb.append("- [")
               .append(t.getStatus())
               .append("] ")
-              .append(t.getCategory())
-              .append(" (id=")
+              .append(t.getCategory());
+            if (t.getCategory() == ConversationTask.TaskCategory.TRIAGE) {
+                sb.append(" (triage pending / out-of-scope candidate)");
+            }
+            sb.append(" (id=")
               .append(t.getId())
               .append("): ")
               .append(t.getRawText())
@@ -86,5 +98,4 @@ public class ConversationOrchestrator {
         }
         return sb.toString();
     }
-    
 }
