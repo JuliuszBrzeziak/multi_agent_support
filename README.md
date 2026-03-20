@@ -39,40 +39,15 @@ java -jar target/support-chat-1.0.0.jar
 
 ```text
 Multi-agent support chat. Type 'exit' to quit.
-
-> i have 500 error, i want billing and i want pet rat
-
-A 500 error indicates that the remote system failed...
-
-> status
-- [DONE] TECHNICAL
-- [NEW] BILLING
-- [NEW] TRIAGE
-
-> next
-BillingAgent: clarify request
-
-> show me my billing history
-BillingAgent: need ID
-
-> 231
-History:
-- Feb: $49
-- Mar: $49
-
-> next
-Out of scope
-
-> make refund
-Refund opened
+>
 ```
 
----
+### 4. Usage
+Type natural language messages, for example:
+- *"My integration with HubSpot keeps failing with a 500 error"*
+- *"I want my billing history"*
 
-## 🔍 What Happens
-
-- Multiple intents → multiple tasks
-- Technical handled first
-- Billing requires clarification
-- Missing data keeps task active
-- Out-of-scope handled gracefully
+**Special Commands:**
+- `status` – Prints all current tasks with their IDs, categories, and statuses.
+- `next` – Asks the orchestrator to process the next pending task.
+- `exit` – Quits the application.
