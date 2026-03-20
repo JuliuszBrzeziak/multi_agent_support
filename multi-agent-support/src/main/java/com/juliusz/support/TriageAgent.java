@@ -1,20 +1,27 @@
 package com.juliusz.support;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class TriageAgent {
 
     private final OpenAiChatClient chatClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private int nextTaskId = 1;
 
     public TriageAgent(OpenAiChatClient chatClient) {
         this.chatClient = chatClient;
     }
 
+    /**
+     * Analyze the user's message and return a list of conversation tasks
+     * with initial categories (TECHNICAL/BILLING/TRIAGE).
+     */
     public List<ConversationTask> analyze(String userMessage) {
         String prompt = buildPrompt(userMessage);
-
         String llmResponseJson = chatClient.sendSingleTurnPrompt(prompt);
 
         return parseTasks(llmResponseJson);
@@ -22,41 +29,78 @@ public class TriageAgent {
 
     private String buildPrompt(String userMessage) {
         return """
-            You are a triage agent for a customer support system.
+                You are a triage agent for a customer support system.
 
-            Your task:
-            - Read the following user message.
-            - Extract all distinct problems mentioned in the message.
-            - For each problem, assign a category from this set:
-              - TECHNICAL
-              - BILLING
-              - TRIAGE (if you are not sure or the problem does not clearly fit the other categories).
+                You see a single user message that may contain one or multiple distinct problems.
+                Your job is to extract each problem and assign it to a category:
 
-            Return ONLY a valid JSON array.
-            Each element must have:
-              - "text": short description of the problem
-              - "category": one of "TECHNICAL", "BILLING", "TRIAGE".
+                - TECHNICAL: integration issues, API problems, setup/configuration errors, 500 errors, etc.
+                - BILLING: plans, pricing, subscriptions, invoices, payments, refunds, double charges, billing history.
+                - TRIAGE: if you are not sure which category fits best.
 
-            User message:
-            """ + userMessage;
+                Return ONLY a JSON array with no extra text.
+                Each element must be an object with:
+                  - "text": short description or the exact fragment of the problem
+                  - "category": one of "TECHNICAL", "BILLING", "TRIAGE"
+
+                Example:
+                User: "My integration with HubSpot keeps failing and I think I was charged twice this month."
+                [
+                  {
+                    "text": "Integration with HubSpot keeps failing",
+                    "category": "TECHNICAL"
+                  },
+                  {
+                    "text": "Charged twice this month",
+                    "category": "BILLING"
+                  }
+                ]
+
+                Now process this user message and return ONLY the JSON array:
+
+                User: %s
+                """.formatted(userMessage);
     }
 
     private List<ConversationTask> parseTasks(String llmResponseJson) {
         List<ConversationTask> tasks = new ArrayList<>();
 
-        // Pseudokod z Jacksonem:
-        //
-        // ObjectMapper mapper = new ObjectMapper();
-        // ArrayNode array = (ArrayNode) mapper.readTree(llmResponseJson);
-        // for (JsonNode node : array) {
-        //     String text = node.get("text").asText();
-        //     String categoryStr = node.get("category").asText();
-        //
-        //     ConversationTask task = new ConversationTask(nextTaskId++, text);
-        //     task.setCategory(parseCategory(categoryStr));
-        //     tasks.add(task);
-        // }
-        //
+        try {
+            JsonNode root = objectMapper.readTree(llmResponseJson);
+
+            if (!root.isArray()) {
+                // jeśli model zawali format, potraktuj całą wiadomość jako jeden TRIAGE task
+                ConversationTask fallback = new ConversationTask(nextTaskId++, llmResponseJson);
+                fallback.setCategory(ConversationTask.TaskCategory.TRIAGE);
+                tasks.add(fallback);
+                return tasks;
+            }
+
+            for (JsonNode node : root) {
+                String text = node.path("text").asText("").trim();
+                String categoryStr = node.path("category").asText("TRIAGE").trim();
+
+                if (text.isEmpty()) {
+                    continue;
+                }
+
+                ConversationTask task = new ConversationTask(nextTaskId++, text);
+                task.setCategory(parseCategory(categoryStr));
+                tasks.add(task);
+            }
+
+            if (tasks.isEmpty()) {
+                ConversationTask fallback = new ConversationTask(nextTaskId++, "Uncategorized: " + llmResponseJson);
+                fallback.setCategory(ConversationTask.TaskCategory.TRIAGE);
+                tasks.add(fallback);
+            }
+
+        } catch (Exception e) {
+            ConversationTask fallback = new ConversationTask(nextTaskId++, "Parse error for: " + llmResponseJson);
+            fallback.setCategory(ConversationTask.TaskCategory.TRIAGE);
+            tasks.add(fallback);
+        }
+
         return tasks;
     }
 
