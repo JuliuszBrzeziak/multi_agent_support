@@ -22,12 +22,10 @@ public class ConversationOrchestrator {
         String trimmed = userMessage.trim().toLowerCase();
         context.addUserMessage(userMessage);
 
-        // Komendy sterujące
         if ("next".equals(trimmed)) {
             return handleNextTask(userMessage);
         }
 
-        // 1. Jeśli jest billingowy task w IN_PROGRESS, kontynuuj go
         ConversationTask inProgressBilling = tasks.stream()
                 .filter(t -> t.getStatus() == ConversationTask.TaskStatus.IN_PROGRESS)
                 .filter(t -> t.getCategory() == ConversationTask.TaskCategory.BILLING)
@@ -40,7 +38,6 @@ public class ConversationOrchestrator {
             return response;
         }
 
-        // 2. Normalny flow: nowa wiadomość → triage LLM → taski
         List<ConversationTask> newTasks = triageAgent.analyze(userMessage);
         tasks.addAll(newTasks);
 
@@ -48,39 +45,56 @@ public class ConversationOrchestrator {
     }
 
     private String handleNextTask(String userMessage) {
-        // znajdź pierwszy NEW task z kategorią TECHNICAL/BILLING
+
         ConversationTask nextTask = tasks.stream()
                 .filter(t -> t.getStatus() == ConversationTask.TaskStatus.NEW)
                 .filter(t -> t.getCategory() != ConversationTask.TaskCategory.TRIAGE)
                 .findFirst()
                 .orElse(null);
-
-        if (nextTask == null) {
+    
+        if (nextTask != null) {
+            String agentResponse;
+            if (nextTask.getCategory() == ConversationTask.TaskCategory.TECHNICAL) {
+                nextTask.setStatus(ConversationTask.TaskStatus.IN_PROGRESS);
+                agentResponse = technicalAgent.respond(nextTask, userMessage, context);
+                nextTask.setStatus(ConversationTask.TaskStatus.DONE);
+            } else {
+                nextTask.setStatus(ConversationTask.TaskStatus.NEW); // BillingAgent sam ustawi IN_PROGRESS/DONE
+                agentResponse = billingAgent.respond(nextTask, userMessage, context);
+                if (nextTask.getStatus() == ConversationTask.TaskStatus.NEW) {
+                    nextTask.setStatus(ConversationTask.TaskStatus.DONE);
+                }
+            }
+            context.addAgentMessage(agentResponse);
+            return agentResponse;
+        }
+    
+        ConversationTask triageTask = tasks.stream()
+                .filter(t -> t.getStatus() == ConversationTask.TaskStatus.NEW)
+                .filter(t -> t.getCategory() == ConversationTask.TaskCategory.TRIAGE)
+                .findFirst()
+                .orElse(null);
+    
+        if (triageTask != null) {
+            triageTask.setStatus(ConversationTask.TaskStatus.DONE);
+    
             String outOfScope = """
                     I’m sorry, but I cannot assist with that request.
                     Please contact our general support team.
                     """;
+    
             context.addAgentMessage(outOfScope);
             return outOfScope;
         }
-
-        String agentResponse;
-        if (nextTask.getCategory() == ConversationTask.TaskCategory.TECHNICAL) {
-            nextTask.setStatus(ConversationTask.TaskStatus.IN_PROGRESS);
-            agentResponse = technicalAgent.respond(nextTask, userMessage, context);
-            nextTask.setStatus(ConversationTask.TaskStatus.DONE);
-        } else {
-            nextTask.setStatus(ConversationTask.TaskStatus.NEW); // BillingAgent sam ustawi IN_PROGRESS/DONE
-            agentResponse = billingAgent.respond(nextTask, userMessage, context);
-            // dla getBillingHistory BillingAgent może zostawić task w IN_PROGRESS
-            if (nextTask.getStatus() == ConversationTask.TaskStatus.NEW) {
-                nextTask.setStatus(ConversationTask.TaskStatus.DONE);
-            }
-        }
-
-        context.addAgentMessage(agentResponse);
-        return agentResponse;
+    
+        String outOfScope = """
+                I’m sorry, but I cannot assist with that request.
+                Please contact our general support team.
+                """;
+        context.addAgentMessage(outOfScope);
+        return outOfScope;
     }
+    
 
     public String getTasksStatus() {
         if (tasks.isEmpty()) {
