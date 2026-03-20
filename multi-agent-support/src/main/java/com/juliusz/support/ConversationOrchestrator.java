@@ -65,4 +65,26 @@ public class ConversationOrchestrator {
         context.addAgentMessage(agentResponse);
         return agentResponse;
     }
+
+    public String getTasksStatus() {
+        if (tasks.isEmpty()) {
+            return "No tasks have been created yet.";
+        }
+    
+        StringBuilder sb = new StringBuilder();
+        sb.append("Current tasks:\n");
+        for (ConversationTask t : tasks) {
+            sb.append("- [")
+              .append(t.getStatus())
+              .append("] ")
+              .append(t.getCategory())
+              .append(" (id=")
+              .append(t.getId())
+              .append("): ")
+              .append(t.getRawText())
+              .append("\n");
+        }
+        return sb.toString();
+    }
+    
 }

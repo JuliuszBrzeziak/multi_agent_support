@@ -18,17 +18,20 @@ public class App {
         while (true) {
             System.out.print("> ");
             String userInput = scanner.nextLine();
-
+        
             if ("exit".equalsIgnoreCase(userInput.trim())) {
                 break;
             }
-
-            // 2. Orchestrator ogarnia context, taski i agentów
+        
+            if ("status".equalsIgnoreCase(userInput.trim())) {
+                System.out.println(orchestrator.getTasksStatus());
+                continue;
+            }
+        
             String response = orchestrator.handleUserMessage(userInput);
-
-            // 3. Wyświetlamy odpowiedź
             System.out.println(response);
         }
+        
 
         scanner.close();
     }
