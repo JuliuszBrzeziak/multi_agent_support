@@ -22,14 +22,12 @@ public class ConversationOrchestrator {
         String trimmed = userMessage.trim().toLowerCase();
         context.addUserMessage(userMessage);
 
-        // komenda NEXT
         if ("next".equals(trimmed)) {
             String resp = handleNextTask(userMessage);
             context.addAgentMessage(resp);
             return resp;
         }
 
-        // billing w IN_PROGRESS ma pierwszeństwo
         ConversationTask inProgressBilling = tasks.stream()
                 .filter(t -> t.getStatus() == ConversationTask.TaskStatus.IN_PROGRESS)
                 .filter(t -> t.getCategory() == ConversationTask.TaskCategory.BILLING)
@@ -42,7 +40,6 @@ public class ConversationOrchestrator {
             return response;
         }
 
-        // nowa wiadomość → triage → nowe taski
         List<ConversationTask> newTasks = triageAgent.analyze(userMessage);
         tasks.addAll(newTasks);
 
@@ -53,7 +50,6 @@ public class ConversationOrchestrator {
 
     private String handleNextTask(String userMessage) {
 
-        // 1) TECHNICAL / BILLING (bez TRIAGE)
         ConversationTask nextTask = tasks.stream()
                 .filter(t -> t.getStatus() == ConversationTask.TaskStatus.NEW)
                 .filter(t -> t.getCategory() != ConversationTask.TaskCategory.TRIAGE)
@@ -67,7 +63,6 @@ public class ConversationOrchestrator {
                 agentResponse = technicalAgent.respond(nextTask, userMessage, context);
                 nextTask.setStatus(ConversationTask.TaskStatus.DONE);
             } else {
-                // BILLING – BillingAgent sam zarządza IN_PROGRESS/DONE
                 nextTask.setStatus(ConversationTask.TaskStatus.NEW);
                 agentResponse = billingAgent.respond(nextTask, userMessage, context);
                 if (nextTask.getStatus() == ConversationTask.TaskStatus.NEW) {
@@ -77,7 +72,6 @@ public class ConversationOrchestrator {
             return agentResponse;
         }
 
-        // 2) jeśli nie ma TECHNICAL/BILLING, domknij TRIAGE
         ConversationTask triageTask = tasks.stream()
                 .filter(t -> t.getStatus() == ConversationTask.TaskStatus.NEW)
                 .filter(t -> t.getCategory() == ConversationTask.TaskCategory.TRIAGE)
@@ -98,7 +92,6 @@ public class ConversationOrchestrator {
             return outOfScope;
         }
 
-        // 3) brak jakichkolwiek NEW tasków
         String outOfScope = """
                 SupportAgent: I’m sorry, but I cannot assist with that request.
                 Please contact our general support team.

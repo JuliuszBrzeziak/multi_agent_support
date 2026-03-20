@@ -22,17 +22,14 @@ public class BillingAgent implements SupportAgent {
     @Override
     public String respond(ConversationTask task, String userMessage, ConversationContext context) {
         try {
-            // 0. Drugi krok: task jest w trakcie (IN_PROGRESS) → userMessage to customerId
             if (task.getStatus() == ConversationTask.TaskStatus.IN_PROGRESS
                     && task.getCategory() == ConversationTask.TaskCategory.BILLING) {
 
                 String trimmed = userMessage.trim();
 
-                // Prosta walidacja: ID musi mieć jakieś cyfry – jeśli nie, dopytaj
                 boolean looksLikeId = trimmed.matches(".*\\d.*"); // zawiera przynajmniej jedną cyfrę
 
                 if (!looksLikeId) {
-                    // NIE zmieniamy statusu, dalej czekamy na poprawne ID
                     return """
                             BillingAgent: I still need your customer ID to show your billing history.
                             Please provide the ID (for example: 123-456-789).
@@ -52,14 +49,12 @@ public class BillingAgent implements SupportAgent {
                 return "BillingAgent: " + summary;
             }
 
-            // 1. Nowy task – normalny LLM tool-calling na treści taska
             String toolDecisionJson = askModelForToolDecision(task.getRawText());
 
             JsonNode root = objectMapper.readTree(toolDecisionJson);
             String toolName = root.path("toolName").asText(null);
             JsonNode args = root.path("arguments");
 
-            // brak wybranego toola → dopytaj i trzymaj task jako IN_PROGRESS
             if (toolName == null || toolName.isEmpty() || "null".equalsIgnoreCase(toolName)) {
                 task.setStatus(ConversationTask.TaskStatus.IN_PROGRESS);
                 return """
