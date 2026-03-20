@@ -1,158 +1,102 @@
-# multi_agent_support
+# 🤖 Multi-Agent Support System
 
-Overview
+![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white)
+![AI](https://img.shields.io/badge/AI-Powered-0078D4?style=for-the-badge)
 
-This project implements a conversational support system in Java with two collaborating AI agents within a single chat: a Technical Specialist and a Billing Specialist.​
-The system routes each user message to the most appropriate agent, supports multi‑turn conversations, and dynamically switches agents within the same conversation.
+## 📖 Overview
+This project implements a conversational support system in Java featuring two collaborating AI agents within a single chat: a **Technical Specialist** and a **Billing Specialist**. The system intelligently routes each user message to the most appropriate agent, supports multi‑turn conversations, and dynamically switches agents based on context within the same conversation.
 
+---
 
-Architecture
-Conversation orchestration
+## 🏗️ Architecture
 
-    A central conversation orchestrator maintains a list of conversation tasks.
+### 🧠 Conversation Orchestration
+- **Central Orchestrator**: Maintains a queue of conversation tasks.
+- **Task Properties**: 
+  - `category`: `TECHNICAL`, `BILLING`, or `TRIAGE` (out‑of‑scope)
+  - `status`: `NEW`, `IN_PROGRESS`, `DONE`
+  - `id` and a short description.
+- **Triage Mechanism**: Classifies new user messages into categories and creates tasks accordingly.
+- **Task Execution**: Only one task is active at a time. The orchestrator determines which agent responds based on the task's category and status.
+- **Manual Implementation**: Agent orchestration is built from scratch in Java without external frameworks (like LangChain), ensuring a clean separation of concerns: the orchestrator decides *who* responds, and the agents decide *how* to handle the request.
 
-    Each task has:
+### 🛠️ Technical Agent (Technical Specialist)
+- Answers technical questions using a focused set of local documentation files.
+- **Workflow**:
+  1. Retrieves the most relevant documentation snippets using local search (e.g., semantic/vector or keyword-based).
+  2. Passes only the retrieved snippets as context to the LLM.
+  3. Generates an answer strictly grounded in the provided documents.
+- If information is missing, it will either ask the user for clarification or explicitly state that the information is unavailable (no guessing/hallucination).
 
-        category: TECHNICAL, BILLING, or TRIAGE (out‑of‑scope),
+### 💳 Billing Agent (Billing Specialist)
+- Handles billing‑related inquiries and requests via **LLM tool calling**.
+- **Backend Capabilities**:
+  - Confirm customer plans and pricing.
+  - Open refund cases.
+  - Explain refund policies and timelines.
+  - Provide billing history.
+- The LLM dynamically decides which tool to call based on the user's message, and the agent maps this to concrete Java methods.
+- **Context Handling**: If required data (e.g., customer ID) is missing, the agent keeps the task `IN_PROGRESS` and explicitly asks the user for the missing details.
 
-        status: NEW, IN_PROGRESS, DONE,
+### 🚪 Triage / Out‑of‑Scope Handling
+- If a message does not pertain to technical or billing support, it is assigned the `TRIAGE` category.
+- The orchestrator responds immediately with a polite out‑of‑scope message detailing what the system can and cannot do, then marks the task as `DONE`.
+- This ensures unrelated multi-topic messages are gracefully acknowledged and closed.
 
-        id and a short description.
+---
 
-    A simple triage step classifies new user messages into categories and creates tasks accordingly.​
+## ✨ Features
+- **Multi-Turn Conversations**: Context preservation across multiple messages.
+- **Specialized Agents**: Dual-agent system (Technical & Billing) plus a dedicated out‑of‑scope pathway.
+- **Manual Routing**: Custom logic based on task categories and statuses.
+- **LLM Tool Calling**: Advanced tool integration for executing billing actions.
+- **Graceful Fallbacks**: Safe handling of unanswerable or ambiguous questions.
 
-    Only one task is active at a time; the orchestrator decides which agent should respond based on the task category and status.​
+---
 
-TechnicalAgent (Technical Specialist)
+## 💻 Tech Stack
+- **Java 17+**
+- **Maven** (Build and dependency management)
+- **Modern LLM** (GPT, Claude, Gemini, etc.) accessed via a simple HTTP client.
+- **Local Document Search** (Vector or keyword‑based search for technical docs).
+- *No agentic frameworks used.*
 
-    Answers technical questions using only a small set of local documentation files.​
+---
 
-    On each technical question:
+## 🚀 Getting Started
 
-        retrieves the most relevant documentation snippets using local search (e.g. semantic / vector or keyword),
-
-        passes only those snippets as context to the LLM,
-
-        generates an answer strictly grounded in the provided documents.​
-
-    If the information is not present in the documentation, it either:
-
-        asks the user for clarification, or
-
-        clearly states that the information is not available, without guessing.​
-
-BillingAgent (Billing Specialist)
-
-    Handles billing‑related questions and requests using LLM tool calling.​
-
-    Exposes several backend capabilities, for example:
-
-        confirm customer plan and pricing,
-
-        open a refund case,
-
-        explain refund policy and timelines,
-
-        provide billing history.​
-
-    The LLM decides which tool to call based on the user message; the agent maps this decision to concrete Java methods.​
-
-    If required information is missing (for example, customer ID for billing history), the agent:
-
-        keeps the task in IN_PROGRESS,
-
-        explicitly asks the user for the missing field instead of silently skipping it.
-
-TRIAGE / Out‑of‑scope handling
-
-    When a message does not fall into technical or billing, triage assigns the task category TRIAGE.​
-
-    The orchestrator immediately responds with a polite out‑of‑scope message explaining what the support chat can and cannot help with and marks the task as DONE.​
-
-    This ensures that “odd” parts of multi‑topic messages are acknowledged and closed, rather than left hanging.
-
-Manual agent orchestration
-
-    Agent orchestration is implemented manually in Java; no agent frameworks (such as LangChain) are used, in line with the task requirements.​
-
-    The design keeps responsibilities separated:
-
-        orchestrator decides who should respond,
-
-        agents decide how to handle the request within their domain.
-
-
-Features
-
-    Multi‑turn conversation with context preservation across messages.​
-
-    Two specialised agents (Technical and Billing) plus a triage/out‑of‑scope path.​
-
-    Manual routing logic based on task category and status.​
-
-    LLM tool calling for billing capabilities.​
-
-    Graceful handling of questions that cannot be answered by either agent.​
-
-Tech Stack
-
-    Java 17 (or newer)
-
-    Maven for build and dependency management
-
-    Any modern LLM (e.g. GPT, Claude, Gemini) accessed via a simple HTTP client​
-
-    Local document search for technical documentation (vector or keyword‑based search)​
-
-    No agentic frameworks (per task restrictions).
-
-
-    Running the project
-1. Configuration
-
+### 1. Configuration
 Set your LLM API key as an environment variable:
-
-bash
+```bash
 export LLM_API_KEY=your_api_key_here
+```
+*(Optionally, adjust the model name or base URL in your configuration file, e.g., `application.properties`)*
 
-Optionally, adjust model name / base URL in configuration (for example, application.properties or a config class).
-2. Build
-
-From the project root:
-
-bash
+### 2. Build
+From the project root directory, run:
+```bash
 mvn clean package
+```
+This will generate a JAR file in the `target/` directory, for example: `target/support-chat-1.0.0.jar`.
 
-This will produce a JAR file in target/, for example:
-
-text
-target/support-chat-1.0.0.jar
-
-3. Run
-
+### 3. Run
 Start the console application:
-
-bash
+```bash
 java -jar target/support-chat-1.0.0.jar
-
+```
 You should see a prompt similar to:
-
-text
+```text
 Multi-agent support chat. Type 'exit' to quit.
 >
+```
 
-4. Usage
+### 4. Usage
+Type natural language messages, for example:
+- *"My integration with HubSpot keeps failing with a 500 error"*
+- *"I want my billing history"*
 
-    Type natural language messages, such as:
-
-        My integration with HubSpot keeps failing with a 500 error
-
-        I want my billing
-
-    Special commands:
-
-        status – prints all current tasks with their IDs, categories and statuses,
-
-        next – asks the orchestrator to process the next pending task,
-
-        exit – quits the program.
+**Special Commands:**
+- `status` – Prints all current tasks with their IDs, categories, and statuses.
+- `next` – Asks the orchestrator to process the next pending task.
+- `exit` – Quits the application.
