@@ -1,10 +1,11 @@
 package com.juliusz.support;
+
 public class ConversationTask {
 
     public enum TaskStatus {
-        NEW,           // orchiestrator
-        IN_PROGRESS,   // triage agent
-        DONE           // done
+        NEW,
+        IN_PROGRESS,
+        DONE
     }
 
     public enum TaskCategory {
