@@ -49,6 +49,7 @@ public class TechnicalAgent implements SupportAgent {
                 %s
                 """.formatted(contextText, question);
 
-        return chatClient.sendSingleTurnPrompt(prompt);
+        String answer = chatClient.sendSingleTurnPrompt(prompt);
+        return "TechnicalAgent: " + answer;
     }
 }

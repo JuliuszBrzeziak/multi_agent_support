@@ -108,12 +108,45 @@ Below is a real example showing how the system handles multiple topics in one co
 
 ```
 Multi-agent support chat. Type 'exit' to quit.
+> i have 500 error and i want billing and i want my rat
+A 500 error indicates that the remote system (for example, HubSpot) failed to process your request. This is usually a temporary issue on their side, but it can also be triggered by invalid payloads. 
 
+When you see a 500, you should log the full request body and correlation ID, then try again with a simple test payload. If the error persists, check the third-party status page and configure exponential backoff retries instead of retrying in a tight loop.
+> status
+Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [NEW] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want my rat
+
+> next
+BillingAgent: I see you mentioned a billing topic, but I'm not sure what you want me to do.
+I can:
+- confirm your current plan and pricing,
+- open a refund case,
+- explain our refund policy,
+- show your recent billing history.
+
+Could you please clarify what exactly you need help with?
+
+> status
+Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [DONE] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want my rat
+
+> what
+I’m sorry, but I cannot assist with that request.
+Please contact our general support team.
+
+> exit
+juliuszbrzeziak@MacBook-Pro-Juliusz multi_agent_support %  cd /Users/juliuszbrzeziak/Documents/INK/multi_agent_support ; /usr/b
+in/env /opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Contents/Home/bin/java @/var/folders/x0/x_fr7c5n5777bx641wb2
+_stw0000gn/T/cp_8s8day65uhi356efwiv7s4z1k.argfile com.juliusz.support.App 
+Multi-agent support chat. Type 'exit' to quit.
 > i have 500 error, i want billing and i want pet rat
 A 500 error indicates that the remote system (for example, HubSpot) failed to process your request. This is usually a temporary issue on their side, but it can also be triggered by invalid payloads.
 
-When you see a 500, log the full request body and correlation ID, then try again with a simple test payload. If the error persists, check the third-party status page and configure exponential backoff retries instead of retrying in a tight loop.
-
+When you see a 500, log the full request body and correlation ID, then try again with a simple test payload. If the error persists, check the third‑party status page and configure exponential backoff retries instead of retrying in a tight loop.
 > status
 Current tasks:
 - [DONE] TECHNICAL (id=1): 500 error
@@ -151,7 +184,6 @@ Here is the billing history for customer 231:
 - February 1, 2025: $49.00 (Pro plan)
 - March 1, 2025: $49.00 (Pro plan)
 - April 1, 2025: $49.00 (Pro plan)
-
 > status
 Current tasks:
 - [DONE] TECHNICAL (id=1): 500 error
@@ -170,13 +202,172 @@ Current tasks:
 
 > make refund
 A refund case has been opened for you. Our billing team will review your request within 3–5 business days. You will be notified once the review is complete.
-
 > status
 Current tasks:
 - [DONE] TECHNICAL (id=1): 500 error
 - [DONE] BILLING (id=2): i want billing
 - [DONE] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want pet rat
 - [DONE] BILLING (id=4): make refund
+
+> exit
+juliuszbrzeziak@MacBook-Pro-Juliusz multi_agent_support % mvn clean package
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.126 s
+[INFO] Finished at: 2026-03-20T04:47:07+01:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] The goal you specified requires a project to execute but there is no POM in this directory (/Users/juliuszbrzeziak/Documents/INK/multi_agent_support). Please verify you invoked Maven from the correct directory. -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MissingProjectException
+juliuszbrzeziak@MacBook-Pro-Juliusz multi_agent_support % ls
+multi-agent-support     README.md
+juliuszbrzeziak@MacBook-Pro-Juliusz multi_agent_support % cd multi-agent-support 
+juliuszbrzeziak@MacBook-Pro-Juliusz multi-agent-support % ls
+pom.xml src     target
+juliuszbrzeziak@MacBook-Pro-Juliusz multi-agent-support % mvn clean package
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------< com.juliusz.support:multi-agent-support >---------------
+[INFO] Building multi-agent-support 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.1.0:clean (default-clean) @ multi-agent-support ---
+[INFO] Deleting /Users/juliuszbrzeziak/Documents/INK/multi_agent_support/multi-agent-support/target
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ multi-agent-support ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 4 resources
+[INFO] 
+[INFO] --- compiler:3.8.0:compile (default-compile) @ multi-agent-support ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 12 source files to /Users/juliuszbrzeziak/Documents/INK/multi_agent_support/multi-agent-support/target/classes
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ multi-agent-support ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /Users/juliuszbrzeziak/Documents/INK/multi_agent_support/multi-agent-support/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.8.0:testCompile (default-testCompile) @ multi-agent-support ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 1 source file to /Users/juliuszbrzeziak/Documents/INK/multi_agent_support/multi-agent-support/target/test-classes
+[INFO] 
+[INFO] --- surefire:2.22.1:test (default-test) @ multi-agent-support ---
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.juliusz.support.AppTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s - in com.juliusz.support.AppTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jar:3.3.0:jar (default-jar) @ multi-agent-support ---
+[INFO] Building jar: /Users/juliuszbrzeziak/Documents/INK/multi_agent_support/multi-agent-support/target/multi-agent-support-1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- assembly:3.6.0:single (default) @ multi-agent-support ---
+[INFO] Building jar: /Users/juliuszbrzeziak/Documents/INK/multi_agent_support/multi-agent-support/target/multi-agent-support-1.0-SNAPSHOT-jar-with-dependencies.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.965 s
+[INFO] Finished at: 2026-03-20T04:47:30+01:00
+[INFO] ------------------------------------------------------------------------
+juliuszbrzeziak@MacBook-Pro-Juliusz multi-agent-support % ls        
+pom.xml src     target
+juliuszbrzeziak@MacBook-Pro-Juliusz multi-agent-support % java -jar target/multi-agent-support-1.0-SNAPSHOT.jar 
+ cd /Users/juliuszbrzeziak/Documents/INK/multi_agent_support ; /usr/bin/env /opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Contents/Home/bin/java @/var/folders/x0/x_fr7c5n5777bx641wb2_stw0000gn/T/cp_8s8day65uhi356efwiv7s4z1k.argfile com.juliusz.support.App 
+juliuszbrzeziak@MacBook-Pro-Juliusz multi-agent-support %  cd /Users/juliuszbrzeziak/Documents/INK/multi_agent_support ; /usr/b
+in/env /opt/homebrew/Cellar/openjdk@17/17.0.18/libexec/openjdk.jdk/Contents/Home/bin/java @/var/folders/x0/x_fr7c5n5777bx641wb2
+_stw0000gn/T/cp_8s8day65uhi356efwiv7s4z1k.argfile com.juliusz.support.App 
+Multi-agent support chat. Type 'exit' to quit.
+> i have 500 error and i want billing and i want to pet my rat
+TechnicalAgent: A 500 error indicates that the remote system (for example, HubSpot) failed to process your request. This is usually a temporary issue on their side, but it can also be triggered by invalid payloads.
+
+When you see a 500, log the full request body and correlation ID, then try again with a simple test payload. If the error persists, check the third‑party status page and configure exponential backoff retries instead of retrying in a tight loop.
+> status
+SupportAgent: Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [NEW] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want to pet my rat
+
+> next
+BillingAgent: I see you mentioned a billing topic, but I'm not sure what you want me to do.
+I can:
+- confirm your current plan and pricing,
+- open a refund case,
+- explain our refund policy,
+- show your recent billing history.
+
+Could you please clarify what exactly you need help with?
+
+> status     
+SupportAgent: Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [IN_PROGRESS] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want to pet my rat
+
+> show recent billing
+BillingAgent: I still need your customer ID to show your billing history.
+Please provide the ID (for example: 123-456-789).
+
+> status
+SupportAgent: Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [IN_PROGRESS] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want to pet my rat
+
+> i dont know
+BillingAgent: I still need your customer ID to show your billing history.
+Please provide the ID (for example: 123-456-789).
+
+> status
+SupportAgent: Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [IN_PROGRESS] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want to pet my rat
+
+> 1234
+BillingAgent: Here is the billing history for customer 1234:
+
+- February 1, 2025: $49.00 (Pro plan)
+- March 1, 2025: $49.00 (Pro plan)
+- April 1, 2025: $49.00 (Pro plan)
+> status
+SupportAgent: Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [DONE] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want to pet my rat
+
+> next
+SupportAgent: This part of your request is outside what this support chat can help with:
+- i want to pet my rat
+
+I can only assist with technical issues and billing questions.
+For anything else, please contact our general support team.
+
+> status
+SupportAgent: Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [DONE] BILLING (id=2): i want billing
+- [DONE] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want to pet my rat
+
+> i want to make refund
+BillingAgent: I've submitted your refund request. Our billing team will review it within 3–5 business days and update you with the outcome. If you have any additional information or questions, please let me know.
+> status
+SupportAgent: Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [DONE] BILLING (id=2): i want billing
+- [DONE] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want to pet my rat
+- [DONE] BILLING (id=4): want to make refund
 
 > exit
 ```

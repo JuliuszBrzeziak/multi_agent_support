@@ -44,11 +44,12 @@ public class BillingAgent implements SupportAgent {
 
                 task.setStatus(ConversationTask.TaskStatus.DONE);
 
-                return summarizeToolResult(
+                String summary = summarizeToolResult(
                         userMessage,
                         "getBillingHistory",
                         toolResult
                 );
+                return "BillingAgent: " + summary;
             }
 
             // 1. Nowy task – normalny LLM tool-calling na treści taska
@@ -101,7 +102,8 @@ public class BillingAgent implements SupportAgent {
                 }
             }
 
-            return summarizeToolResult(task.getRawText(), toolName, toolResult);
+            String summary = summarizeToolResult(task.getRawText(), toolName, toolResult);
+            return "BillingAgent: " + summary;
 
         } catch (Exception e) {
             return "BillingAgent: something went wrong while processing your billing request.";
