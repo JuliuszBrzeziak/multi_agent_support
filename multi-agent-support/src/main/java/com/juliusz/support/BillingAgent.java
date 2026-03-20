@@ -24,19 +24,32 @@ public class BillingAgent implements SupportAgent {
         try {
             // 0. Drugi krok: task jest w trakcie (IN_PROGRESS) → userMessage to customerId
             if (task.getStatus() == ConversationTask.TaskStatus.IN_PROGRESS
-                    && task.getCategory() == ConversationTask.TaskCategory.BILLING) {
-
-                String customerId = userMessage.trim();
-                String toolResult = tools.getBillingHistory(customerId);
-
-                task.setStatus(ConversationTask.TaskStatus.DONE);
-
-                return summarizeToolResult(
-                        userMessage,
-                        "getBillingHistory",
-                        toolResult
-                );
-            }
+            && task.getCategory() == ConversationTask.TaskCategory.BILLING) {
+    
+        String trimmed = userMessage.trim();
+    
+        // Prosta walidacja: ID musi mieć jakieś cyfry – jeśli nie, dopytaj
+        boolean looksLikeId = trimmed.matches(".*\\d.*"); // zawiera przynajmniej jedną cyfrę
+    
+        if (!looksLikeId) {
+            // NIE zmieniamy statusu, dalej czekamy na poprawne ID
+            return """
+                    BillingAgent: I still need your customer ID to show your billing history.
+                    Please provide the ID (for example: 123-456-789).
+                    """;
+        }
+    
+        String customerId = trimmed;
+        String toolResult = tools.getBillingHistory(customerId);
+    
+        task.setStatus(ConversationTask.TaskStatus.DONE);
+    
+        return summarizeToolResult(
+                userMessage,
+                "getBillingHistory",
+                toolResult
+        );
+    }    
 
             // 1. Nowy task – normalny LLM tool-calling na treści taska
             String toolDecisionJson = askModelForToolDecision(task.getRawText());
