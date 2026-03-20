@@ -1,3 +1,4 @@
+package com.juliusz.support;
 public class ConversationTask {
 
     public enum TaskStatus {
