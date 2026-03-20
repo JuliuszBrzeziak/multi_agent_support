@@ -25,13 +25,22 @@ public class BillingAgent implements SupportAgent {
             // 1. Poproś LLM o wybór toola i argumentów w formacie JSON
             String toolDecisionJson = askModelForToolDecision(userMessage);
 
-            // 2. Sparsuj JSON (toolName + arguments)
             JsonNode root = objectMapper.readTree(toolDecisionJson);
             String toolName = root.path("toolName").asText(null);
             JsonNode args = root.path("arguments");
 
-            if (toolName == null || toolName.isEmpty()) {
-                return "BillingAgent: I couldn’t match your request to any billing action.";
+            // 2. Jeśli model nie wybrał żadnego narzędzia – dopytaj użytkownika
+            if (toolName == null || toolName.isEmpty() || "null".equalsIgnoreCase(toolName)) {
+                return """
+                        BillingAgent: I see you mentioned a billing topic, but I'm not sure what you want me to do.
+                        I can:
+                        - confirm your current plan and pricing,
+                        - open a refund case,
+                        - explain our refund policy,
+                        - show your recent billing history.
+
+                        Could you please clarify what exactly you need help with?
+                        """;
             }
 
             // 3. Wywołaj odpowiedni BillingTools
@@ -49,12 +58,16 @@ public class BillingAgent implements SupportAgent {
                 case "explainRefundPolicy" -> {
                     toolResult = tools.explainRefundPolicy();
                 }
+                case "getBillingHistory" -> {
+                    String customerId = args.path("customerId").asText("demo-customer-id");
+                    toolResult = tools.getBillingHistory(customerId);
+                }
                 default -> {
                     toolResult = "BillingAgent: unknown billing tool: " + toolName;
                 }
             }
 
-            // 4. Poproś LLM o złożenie finalnej, ładnej odpowiedzi na bazie wyniku toola
+            // 4. Poproś LLM o finalną odpowiedź na bazie wyniku toola
             return summarizeToolResult(userMessage, toolName, toolResult);
 
         } catch (Exception e) {
@@ -70,29 +83,61 @@ public class BillingAgent implements SupportAgent {
                    - Use when the user asks about their current plan, pricing, or subscription.
 
                 2) openRefundCase(customerId: string, reason: string)
-                   - Use when the user mentions refunds, being charged twice, double charges, or similar.
+                   - Use when the user mentions refunds, being charged twice, double charges, or payment problems.
 
                 3) explainRefundPolicy()
                    - Use when the user asks about refund policy, refund timeline, or how refunds work.
 
+                4) getBillingHistory(customerId: string)
+                   - Use when the user asks about billing history, past invoices, or previous charges.
+
                 Your task:
                 - Read the user's message.
-                - Decide which single tool is the best to call (or none).
+                - Decide which SINGLE tool is the best to call.
                 - Construct appropriate arguments.
+                - If the user's request is too vague to choose a tool, set "toolName" to null and "arguments" to {}.
 
-                Return ONLY a JSON object in this exact format:
+                Return ONLY a JSON object in this exact format, with no extra text:
 
                 {
-                  "toolName": "confirmPlan" | "openRefundCase" | "explainRefundPolicy" | null,
+                  "toolName": "confirmPlan" | "openRefundCase" | "explainRefundPolicy" | "getBillingHistory" | null,
                   "arguments": {
                     // arguments for the selected tool
                   }
                 }
 
-                If you cannot decide which tool to call, set "toolName" to null.
+                Example 1:
+                User: "I was charged twice this month"
+                {
+                  "toolName": "openRefundCase",
+                  "arguments": {
+                    "customerId": "demo-customer-id",
+                    "reason": "User was charged twice this month"
+                  }
+                }
 
-                User message:
-                """ + userMessage;
+                Example 2:
+                User: "What plan am I on and how much does it cost?"
+                {
+                  "toolName": "confirmPlan",
+                  "arguments": {
+                    "customerId": "demo-customer-id"
+                  }
+                }
+
+                Example 3:
+                User: "Can you show me my recent invoices?"
+                {
+                  "toolName": "getBillingHistory",
+                  "arguments": {
+                    "customerId": "demo-customer-id"
+                  }
+                }
+
+                Now process the following user message and return ONLY the JSON:
+
+                User: %s
+                """.formatted(userMessage);
 
         return chatClient.sendSingleTurnPrompt(prompt);
     }
