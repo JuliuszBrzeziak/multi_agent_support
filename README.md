@@ -100,3 +100,103 @@ Type natural language messages, for example:
 - `status` – Prints all current tasks with their IDs, categories, and statuses.
 - `next` – Asks the orchestrator to process the next pending task.
 - `exit` – Quits the application.
+
+## Technical documentation files
+
+### Example Conversation
+
+Below is a real example showing how the system handles multiple topics in one conversation, separates them into tasks, and switches between agents when needed.
+
+
+Multi-agent support chat. Type 'exit' to quit.
+
+> i have 500 error, i want billing and i want pet rat
+A 500 error indicates that the remote system (for example, HubSpot) failed to process your request. This is usually a temporary issue on their side, but it can also be triggered by invalid payloads.
+
+When you see a 500, log the full request body and correlation ID, then try again with a simple test payload. If the error persists, check the third-party status page and configure exponential backoff retries instead of retrying in a tight loop.
+
+> status
+Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [NEW] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want pet rat
+
+> next
+BillingAgent: I see you mentioned a billing topic, but I'm not sure what you want me to do.
+I can:
+- confirm your current plan and pricing,
+- open a refund case,
+- explain our refund policy,
+- show your recent billing history.
+
+Could you please clarify what exactly you need help with?
+
+> status
+Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [IN_PROGRESS] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want pet rat
+
+> show me my billing history
+BillingAgent: I still need your customer ID to show your billing history.
+Please provide the ID (for example: 123-456-789).
+
+> status
+Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [IN_PROGRESS] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want pet rat
+
+> 231
+Here is the billing history for customer 231:
+- February 1, 2025: $49.00 (Pro plan)
+- March 1, 2025: $49.00 (Pro plan)
+- April 1, 2025: $49.00 (Pro plan)
+
+> status
+Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [DONE] BILLING (id=2): i want billing
+- [NEW] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want pet rat
+
+> next
+I’m sorry, but I cannot assist with that request.
+Please contact our general support team.
+
+> status
+Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [DONE] BILLING (id=2): i want billing
+- [DONE] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want pet rat
+
+> make refund
+A refund case has been opened for you. Our billing team will review your request within 3–5 business days. You will be notified once the review is complete.
+
+> status
+Current tasks:
+- [DONE] TECHNICAL (id=1): 500 error
+- [DONE] BILLING (id=2): i want billing
+- [DONE] TRIAGE (triage pending / out-of-scope candidate) (id=3): i want pet rat
+- [DONE] BILLING (id=4): make refund
+
+> exit
+
+
+
+What Happens in This Scenario
+
+This conversation demonstrates several important behaviors of the system:
+
+    The first message contains three different intents, so the system creates separate tasks.
+
+    The Technical Agent handles the 500 error request first and provides troubleshooting guidance.
+
+    The Billing Agent does not guess what the user wants and asks for clarification.
+
+    When the user asks for billing history, the agent detects that the customer ID is required and keeps the task in progress.
+
+    After receiving the ID, the Billing Agent completes the request and marks the task as done.
+
+    The pet rat request is treated as out of scope, so it is routed through the triage path and closed politely.
+
+    Later, the user creates a new billing task with make refund, and the system handles it independently from the previous billing history request.
