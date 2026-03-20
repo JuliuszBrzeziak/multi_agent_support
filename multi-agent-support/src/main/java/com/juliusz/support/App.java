@@ -6,9 +6,10 @@ public class App {
 
     public static void main(String[] args) {
         // 1. Inicjalizacja klienta LLM i agentów
-        OpenAiChatClient chatClient = new OpenAiChatClient(); // dopasuj do swojego konstruktora
+        OpenAiChatClient chatClient = new OpenAiChatClient();
         TriageAgent triageAgent = new TriageAgent(chatClient);
-        ConversationOrchestrator orchestrator = new ConversationOrchestrator();
+        ConversationOrchestrator orchestrator = new ConversationOrchestrator(triageAgent);
+        
 
         System.out.println("Multi-agent support chat. Type 'exit' to quit.");
 
