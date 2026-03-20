@@ -5,23 +5,28 @@ import java.util.Scanner;
 public class App {
 
     public static void main(String[] args) {
-        OpenAiChatClient chatClient = new OpenAiChatClient();
+        // 1. Inicjalizacja klienta LLM i agentów
+        OpenAiChatClient chatClient = new OpenAiChatClient(); // dopasuj do swojego konstruktora
+        TriageAgent triageAgent = new TriageAgent(chatClient);
         ConversationOrchestrator orchestrator = new ConversationOrchestrator();
+
+        System.out.println("Multi-agent support chat. Type 'exit' to quit.");
+
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Multi-agent support console. Type 'exit' to quit.");
-
         while (true) {
-            System.out.print("You: ");
-            String input = scanner.nextLine();
+            System.out.print("> ");
+            String userInput = scanner.nextLine();
 
-            if ("exit".equalsIgnoreCase(input.trim())) {
+            if ("exit".equalsIgnoreCase(userInput.trim())) {
                 break;
             }
 
-            AgentReply reply = orchestrator.handleUserMessage(input);
-            System.out.println(reply.agentName() + ": " + reply.message());
-            
+            // 2. Orchestrator ogarnia context, taski i agentów
+            String response = orchestrator.handleUserMessage(userInput);
+
+            // 3. Wyświetlamy odpowiedź
+            System.out.println(response);
         }
 
         scanner.close();

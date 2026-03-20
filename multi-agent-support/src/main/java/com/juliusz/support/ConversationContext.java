@@ -9,11 +9,18 @@ import java.util.List;
  */
 public class ConversationContext {
 
-    // Simple in-memory history of exchanged messages (for future use).
     private final List<String> messageHistory = new ArrayList<>();
 
     public void addMessage(String message) {
         messageHistory.add(message);
+    }
+
+    public void addUserMessage(String message) {
+        addMessage("USER: " + message);
+    }
+
+    public void addAgentMessage(String message) {
+        addMessage("AGENT: " + message);
     }
 
     public List<String> getMessageHistory() {
